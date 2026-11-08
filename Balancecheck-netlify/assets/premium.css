@@ -69,6 +69,16 @@ img[src*="/photos/brands/"]:hover {
   filter: brightness(1.05);
 }
 
+/* ── Per-brand card colors ── */
+button[data-bc-colored] {
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease !important;
+}
+
+button[data-bc-colored]:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: var(--card-shadow-hover) !important;
+}
+
 /* ── Premium card styling ── */
 button[class*="shadow-hairline"],
 div[class*="shadow-hairline"],
@@ -84,17 +94,16 @@ a[class*="shadow-hairline"]:hover {
 }
 
 /* ── Country / region selector cards ── */
-button[class*="rounded-2xl"][class*="p-4"],
-button[class*="rounded-2xl"][class*="p-5"],
-a[class*="rounded-2xl"][class*="p-4"],
-a[class*="rounded-2xl"][class*="p-5"] {
+button[class*="rounded-3xl"][class*="p-4"],
+a[class*="rounded-3xl"][class*="p-4"] {
   transition: all 0.25s cubic-bezier(0.2, 0, 0, 1) !important;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
-button[class*="rounded-2xl"][class*="p-4"]:hover,
-a[class*="rounded-2xl"][class*="p-4"]:hover {
+button[class*="rounded-3xl"][class*="p-4"]:hover,
+a[class*="rounded-3xl"][class*="p-4"]:hover {
   transform: translateY(-2px);
 }
 
@@ -163,6 +172,12 @@ textarea:focus {
   box-shadow: 0 0 0 3px var(--color-accent-glow) !important;
 }
 
+/* ── Denomination pills — active state ── */
+button[aria-pressed="true"][class*="rounded-full"] {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  font-weight: 600;
+}
+
 /* ── Meter / progress bar ── */
 .meter > span {
   background: var(--premium-gradient) !important;
@@ -211,17 +226,6 @@ main, [role="main"], section {
   }
 }
 
-/* ── Wallet / settings page polish ── */
-input[placeholder*="T..."],
-input[placeholder*="0x..."],
-input[placeholder*="bc1..."],
-input[placeholder*="you@"],
-input[placeholder*="234..."] {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  letter-spacing: 0.02em;
-}
-
 /* ── Subtle background pattern for premium feel ── */
 body::before {
   content: '';
@@ -230,6 +234,60 @@ body::before {
   background: radial-gradient(ellipse at top, var(--color-accent-glow) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
+}
+
+/* ── Desktop layout enhancements ── */
+@media (min-width: 768px) {
+  /* Wider brand card grid on desktop */
+  .grid.grid-cols-2.gap-3 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* Larger hero images */
+  body > div > div:first-child img[src*="fan"] {
+    border-radius: 1.5rem;
+  }
+
+  /* More spacious country cards */
+  button[class*="rounded-3xl"][class*="min-h-28"] {
+    min-height: 8rem;
+  }
+
+  /* Denomination pills spacing */
+  .no-scrollbar {
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* 4-col brand grid on large screens */
+  .grid.grid-cols-2.gap-3:has(img[src*="/photos/brands/"]) {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* 5-col country grid on large screens */
+  .grid.grid-cols-2.gap-3:has(button[class*="min-h-28"]) {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+/* ── Mobile polish ── */
+@media (max-width: 767px) {
+  /* Larger tap targets on mobile */
+  button[class*="rounded-3xl"][class*="min-h-28"] {
+    min-height: 6.5rem;
+  }
+
+  /* Full-width denomination pills on mobile */
+  .no-scrollbar button[aria-pressed] {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Mobile brand cards */
+  img[src*="/photos/brands/"] {
+    height: 6rem;
+  }
 }
 
 /* ── Scrollbar styling ── */

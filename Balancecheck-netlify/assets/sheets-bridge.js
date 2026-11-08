@@ -23,19 +23,18 @@
     try { sessionStorage.setItem("bc_buyer_email", v); } catch {}
   }
 
-  /* ── Inject buyer email field into step 3 (Details / Amount) ── */
+  /* ── Inject buyer email field on BUY flow only (step 3+) ── */
   var injected = false;
   function injectEmailField() {
     if (injected) return;
-    /* Look for the Continue button on steps 3+ */
-    var forms = document.querySelectorAll("form");
+    /* Only inject on /buy pages, not /verify */
+    if (!location.pathname.startsWith("/buy")) return;
+
     var step = document.body.innerText.match(/(\d) of 4/);
     if (!step) return;
     var stepNum = parseInt(step[1]);
-    /* Inject on step 3 (Details in verify, Amount in buy) */
     if (stepNum < 3) return;
 
-    /* Find the Continue / submit button */
     var btns = document.querySelectorAll('button[type="submit"], button.bg-blue');
     var target = null;
     for (var i = 0; i < btns.length; i++) {
@@ -45,8 +44,6 @@
       }
     }
     if (!target) return;
-
-    /* Check if already injected */
     if (document.getElementById("bc-buyer-email")) { injected = true; return; }
 
     var wrapper = document.createElement("div");
@@ -70,7 +67,6 @@
     injected = true;
   }
 
-  /* ── Watch for navigation / step changes ── */
   var observer = new MutationObserver(function () {
     injected = false;
     setTimeout(injectEmailField, 300);
@@ -84,12 +80,10 @@
     var url = arguments[0];
     var opts = arguments[1] || {};
 
-    /* Detect FormSubmit.co or Netlify form POST */
     var isFormSubmit = typeof url === "string" &&
       (url.includes("formsubmit.co") || (url === "/" && opts.method === "POST"));
 
     if (isFormSubmit) {
-      /* Extract order info from FormData */
       var fd = opts.body;
       if (fd instanceof FormData) {
         var sheetsUrl = getSheetsUrl();
@@ -104,7 +98,6 @@
             email: getBuyerEmail(),
             checkout: fd.get("checkout") || ""
           };
-          /* Fire and forget to Google Sheets */
           origFetch(sheetsUrl, {
             method: "POST",
             body: JSON.stringify(payload),
