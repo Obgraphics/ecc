@@ -1,0 +1,256 @@
+/* Premium visual upgrade — layered on top of the Tailwind build */
+
+/* ── Richer color palette ── */
+:root {
+  --color-blue: #0071e3;
+  --color-accent-glow: rgba(0, 113, 227, 0.15);
+  --premium-gradient: linear-gradient(135deg, #0071e3 0%, #5856d6 50%, #af52de 100%);
+  --premium-gradient-subtle: linear-gradient(135deg, rgba(0,113,227,0.08) 0%, rgba(88,86,214,0.05) 50%, rgba(175,82,222,0.08) 100%);
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 8px 30px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+  --hero-overlay: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-accent-glow: rgba(10, 132, 255, 0.2);
+    --premium-gradient-subtle: linear-gradient(135deg, rgba(10,132,255,0.12) 0%, rgba(88,86,214,0.08) 50%, rgba(175,82,222,0.12) 100%);
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06);
+    --card-shadow-hover: 0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+  }
+}
+
+/* ── Smooth page entrance ── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-6px); }
+}
+
+body > div {
+  animation: fadeSlideUp 0.5s ease-out;
+}
+
+/* ── Premium nav bar ── */
+nav, header {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* ── Hero section glow ── */
+body > div > div:first-child img[src*="fan"],
+body > div > div:first-child img[src*="grid"],
+body > div > div:first-child img[src*="single"] {
+  transition: transform 0.6s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.4s ease;
+}
+
+body > div > div:first-child img[src*="fan"]:hover,
+body > div > div:first-child img[src*="grid"]:hover,
+body > div > div:first-child img[src*="single"]:hover {
+  transform: scale(1.02);
+}
+
+/* ── Brand card images — lift & glow on hover ── */
+img[src*="/photos/brands/"] {
+  transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.35s ease, filter 0.35s ease;
+}
+
+img[src*="/photos/brands/"]:hover {
+  transform: scale(1.04);
+  filter: brightness(1.05);
+}
+
+/* ── Premium card styling ── */
+button[class*="shadow-hairline"],
+div[class*="shadow-hairline"],
+a[class*="shadow-hairline"] {
+  box-shadow: var(--card-shadow) !important;
+  transition: box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+button[class*="shadow-hairline"]:hover,
+a[class*="shadow-hairline"]:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Country / region selector cards ── */
+button[class*="rounded-2xl"][class*="p-4"],
+button[class*="rounded-2xl"][class*="p-5"],
+a[class*="rounded-2xl"][class*="p-4"],
+a[class*="rounded-2xl"][class*="p-5"] {
+  transition: all 0.25s cubic-bezier(0.2, 0, 0, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+button[class*="rounded-2xl"][class*="p-4"]:hover,
+a[class*="rounded-2xl"][class*="p-4"]:hover {
+  transform: translateY(-2px);
+}
+
+/* ── Selected state glow ── */
+button[class*="bg-blue"],
+a[class*="bg-blue"] {
+  box-shadow: 0 4px 20px rgba(0, 113, 227, 0.4), 0 0 0 1px rgba(0, 113, 227, 0.2) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  button[class*="bg-blue"],
+  a[class*="bg-blue"] {
+    box-shadow: 0 4px 24px rgba(10, 132, 255, 0.35), 0 0 0 1px rgba(10, 132, 255, 0.3) !important;
+  }
+}
+
+/* ── Primary action button (Continue, Check balance, Buy) ── */
+button.bg-blue,
+a.bg-blue {
+  background: var(--premium-gradient) !important;
+  box-shadow: 0 4px 15px rgba(0, 113, 227, 0.35) !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+button.bg-blue:hover,
+a.bg-blue:hover {
+  box-shadow: 0 6px 25px rgba(0, 113, 227, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+button.bg-blue:active,
+a.bg-blue:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ── Subtle shimmer on primary buttons ── */
+button.bg-blue::after,
+a.bg-blue::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Premium input fields ── */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+textarea:focus {
+  border-color: var(--color-blue) !important;
+  box-shadow: 0 0 0 3px var(--color-accent-glow) !important;
+}
+
+/* ── Meter / progress bar ── */
+.meter > span {
+  background: var(--premium-gradient) !important;
+  transition: width 0.5s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ── Image cards in brand picker — refined shadows ── */
+img.frame {
+  border-radius: 12px;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease;
+}
+
+img.frame:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Category filter pills ── */
+button[class*="rounded-full"] {
+  transition: all 0.2s ease !important;
+}
+
+button[class*="rounded-full"][class*="bg-paper"],
+button[class*="rounded-full"][class*="bg-black"] {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Smooth page transitions ── */
+main, [role="main"], section {
+  animation: fadeSlideUp 0.4s ease-out;
+}
+
+/* ── Hero text enhancement ── */
+.display, h1.display {
+  background: linear-gradient(135deg, var(--color-paper) 0%, var(--color-paper-dim) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (prefers-color-scheme: dark) {
+  .display, h1.display {
+    background: linear-gradient(135deg, #ffffff 0%, #a1a1a6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* ── Wallet / settings page polish ── */
+input[placeholder*="T..."],
+input[placeholder*="0x..."],
+input[placeholder*="bc1..."],
+input[placeholder*="you@"],
+input[placeholder*="234..."] {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+}
+
+/* ── Subtle background pattern for premium feel ── */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at top, var(--color-accent-glow) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-mist);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-paper-dim);
+}
+
+/* ── Print: hide nav ── */
+@media print {
+  nav, header, .dock { display: none !important; }
+}
