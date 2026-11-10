@@ -209,21 +209,29 @@ main, [role="main"], section {
   animation: fadeSlideUp 0.4s ease-out;
 }
 
-/* ── Hero text enhancement ── */
-.display, h1.display {
-  background: linear-gradient(135deg, var(--color-paper) 0%, var(--color-paper-dim) 100%);
+/* ── Hero headline — gradient on the h1 only (never inputs, logo or step titles) ── */
+h1.display.text-display {
+  background: linear-gradient(120deg, var(--color-paper) 0%, var(--color-paper) 55%, var(--color-blue) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+h1.display.text-display > span {
+  -webkit-text-fill-color: var(--color-mist);
+}
+
 @media (prefers-color-scheme: dark) {
-  .display, h1.display {
-    background: linear-gradient(135deg, #ffffff 0%, #a1a1a6 100%);
+  h1.display.text-display {
+    background: linear-gradient(120deg, #ffffff 0%, #ffffff 55%, #5ac8fa 100%);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+}
+
+/* Step titles get a touch more presence */
+h1.display:not(.text-display) {
+  letter-spacing: -0.03em;
 }
 
 /* ── Subtle background pattern for premium feel ── */
@@ -266,7 +274,8 @@ body::before {
   }
 
   /* 5-col country grid on large screens */
-  .grid.grid-cols-2.gap-3:has(button[class*="min-h-28"]) {
+  .grid.grid-cols-2.gap-3:has(button[class*="min-h-28"]),
+  .grid.grid-cols-2.gap-3:has(a[class*="min-h-28"]) {
     grid-template-columns: repeat(5, 1fr) !important;
   }
 }

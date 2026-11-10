@@ -11,8 +11,8 @@
     nordstrom:   { bg: "#1a1a2e", accent: "#c9a96e", text: "#ffffff" },
     steam:       { bg: "#1b2838", accent: "#66c0f4", text: "#ffffff" },
     razer:       { bg: "#111111", accent: "#44d62c", text: "#ffffff" },
-    xbox:        { bg: "#107c10", accent: "#52b043", text: "#ffffff" },
-    playstation: { bg: "#00439c", accent: "#2e6db4", text: "#ffffff" },
+    xbox:        { bg: "#107c10", accent: "#c6f5bf", text: "#ffffff" },
+    playstation: { bg: "#00439c", accent: "#a9cdff", text: "#ffffff" },
     google:      { bg: "#ffffff", accent: "#4285f4", text: "#1d1d1f" },
     spotify:     { bg: "#191414", accent: "#1db954", text: "#ffffff" },
     hulu:        { bg: "#1ce783", accent: "#040405", text: "#040405" },
@@ -74,15 +74,14 @@
         });
         otherBtn.setAttribute("aria-pressed", "true");
         otherBtn.className = otherBtn.className.replace(/bg-panel text-mist/g, "bg-paper text-ink");
-        /* Focus the manual input */
-        var container = row.closest("div");
-        if (container) {
-          var input = container.querySelector('input[inputmode="numeric"]');
-          if (input) {
-            input.value = "";
-            input.dispatchEvent(new Event("input", { bubbles: true }));
-            input.focus();
-          }
+        /* Clear and focus the manual input (React needs the native setter) */
+        var input = row.parentElement && row.parentElement.querySelector('input[inputmode="numeric"]');
+        if (input) {
+          var setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+          setter.call(input, "");
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.focus();
+          input.scrollIntoView({ block: "center", behavior: "smooth" });
         }
       });
       row.appendChild(otherBtn);
@@ -95,7 +94,8 @@
     var photoLabels = document.querySelectorAll("span.text-sm.text-mist");
     var photoSection = null;
     photoLabels.forEach(function (el) {
-      if (el.textContent.trim() === "Photo") {
+      var t = el.textContent.trim();
+      if (t === "Photo" || t === "Front of card") {
         photoSection = el.closest("div");
         el.textContent = "Front of card";
       }
