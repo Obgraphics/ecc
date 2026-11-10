@@ -149,4 +149,117 @@
   });
   obs.observe(document.body, { childList: true, subtree: true });
   setTimeout(enhance, 400);
+
+  /* ── Toast pop-up ── */
+  function toast(title, body, tone) {
+    var el = document.createElement("div");
+    el.setAttribute("role", "status");
+    el.style.cssText =
+      "position:fixed;left:50%;top:16px;transform:translate(-50%,-20px);z-index:9999;max-width:min(92vw,420px);" +
+      "padding:14px 18px;border-radius:16px;color:#fff;font:500 15px/1.4 system-ui,-apple-system,sans-serif;" +
+      "box-shadow:0 12px 40px rgba(0,0,0,.35);opacity:0;transition:all .35s cubic-bezier(.2,0,0,1);" +
+      "background:" + (tone === "bad" ? "linear-gradient(135deg,#ff3b30,#ff6b6b)" : tone === "good" ? "linear-gradient(135deg,#34c759,#30d158)" : "linear-gradient(135deg,#0071e3,#5856d6)");
+    el.innerHTML = "<div style='font-weight:700;font-size:16px'>" + title + "</div>" + (body ? "<div style='opacity:.92;margin-top:4px;font-weight:400'>" + body + "</div>" : "");
+    document.body.appendChild(el);
+    requestAnimationFrame(function () { el.style.opacity = "1"; el.style.transform = "translate(-50%,0)"; });
+    setTimeout(function () { el.style.opacity = "0"; el.style.transform = "translate(-50%,-20px)"; setTimeout(function () { el.remove(); }, 400); }, 6000);
+    try { if (navigator.vibrate) navigator.vibrate(40); } catch {}
+  }
+  window.bcToast = toast;
+
+  /* ── Settings sync: wallets / email / BTC price come from the Google Sheet ── */
+  var sheetsUrl = (window.BC_CONFIG && window.BC_CONFIG.sheetsUrl) || "";
+  var KEYS = ["trc20", "erc20", "btc", "whatsapp", "notifyEmail"];
+
+  function applySettings(s) {
+    var raw, data;
+    try { raw = localStorage.getItem("balancecheck"); data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+    if (!data || !data.state) data = { state: { tickets: [], wallet: {} }, version: 1 };
+    var w = data.state.wallet || {};
+    var changed = false;
+    KEYS.forEach(function (k) {
+      var v = s[k] == null ? "" : String(s[k]);
+      if ((w[k] || "") !== v) { w[k] = v; changed = true; }
+    });
+    var btc = Number(s.btcUsd) > 0 ? Number(s.btcUsd) : null;
+    if ((w.btcUsd || null) !== btc) { w.btcUsd = btc; changed = true; }
+    if (sheetsUrl && w.sheetsUrl !== sheetsUrl) { w.sheetsUrl = sheetsUrl; changed = true; }
+    data.state.wallet = w;
+    if (changed) { try { localStorage.setItem("balancecheck", JSON.stringify(data)); } catch {} }
+    return changed;
+  }
+
+  /* Apply the cached copy synchronously so the app boots with the right values */
+  try { var cached = localStorage.getItem("bc_settings"); if (cached) applySettings(JSON.parse(cached)); } catch {}
+
+  if (sheetsUrl) {
+    fetch(sheetsUrl + (sheetsUrl.includes("?") ? "&" : "?") + "action=settings", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !j.settings) return;
+        try { localStorage.setItem("bc_settings", JSON.stringify(j.settings)); } catch {}
+        var changed = applySettings(j.settings);
+        var flag = "bc_settings_reloaded";
+        if (changed && !sessionStorage.getItem(flag)) {
+          sessionStorage.setItem(flag, "1");
+          location.reload();
+        }
+      })
+      .catch(function () {});
+  }
+
+  /* ── Buyer-side status pop-up on the order page ── */
+  var LABELS = {
+    "Valid":     ["Balance check successful", "Your card is valid. Thank you!", "good"],
+    "Invalid":   ["Card invalid", "This card could not be verified. Please contact us.", "bad"],
+    "Delivered": ["Gift card delivered", "Check your email inbox (and spam folder).", "good"]
+  };
+  var PURCHASE_PROBLEM = ["Problem with your order", "We couldn't complete this order. Please contact us.", "bad"];
+  function labelFor(status, type) {
+    if (status === "Invalid" && /purchase|buy/i.test(type || "")) return PURCHASE_PROBLEM;
+    return LABELS[status];
+  }
+
+  function pollStatus() {
+    var m = location.pathname.match(/^\/ledger\/([^/]+)/);
+    if (!m || !sheetsUrl) return;
+    var id = decodeURIComponent(m[1]);
+    fetch(sheetsUrl + (sheetsUrl.includes("?") ? "&" : "?") + "action=status&id=" + encodeURIComponent(id), { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !j.status) return;
+        var seenKey = "bc_seen_" + id;
+        var seen = "";
+        try { seen = localStorage.getItem(seenKey) || ""; } catch {}
+        var status = String(j.status);
+        var note = j.note ? String(j.note) : "";
+        var l = labelFor(status, j.type);
+        renderStatusBanner(l, note);
+        if (status !== seen && l) {
+          try { localStorage.setItem(seenKey, status); } catch {}
+          toast(l[0], note || l[1], l[2]);
+        }
+      })
+      .catch(function () {});
+  }
+
+  function renderStatusBanner(l, note) {
+    var h1 = document.querySelector("main h1");
+    if (!h1) return;
+    var el = document.getElementById("bc-status-banner");
+    if (!l) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "bc-status-banner";
+      el.style.cssText = "margin-top:16px;padding:14px 18px;border-radius:16px;color:#fff;font-weight:600;";
+      h1.insertAdjacentElement("afterend", el);
+    }
+    el.style.background = l[2] === "bad" ? "linear-gradient(135deg,#ff3b30,#ff6b6b)" : "linear-gradient(135deg,#34c759,#30d158)";
+    el.innerHTML = l[0] + (note ? "<div style='font-weight:400;opacity:.95;margin-top:4px'>" + note.replace(/</g, "&lt;") + "</div>" : "");
+  }
+
+  setTimeout(pollStatus, 1200);
+  setInterval(pollStatus, 15000);
+  var lastPath = location.pathname;
+  setInterval(function () { if (location.pathname !== lastPath) { lastPath = location.pathname; setTimeout(pollStatus, 800); } }, 500);
 })();
