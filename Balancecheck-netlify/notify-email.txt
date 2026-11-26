@@ -1,0 +1,2 @@
+# Put the shop email on its own line below. That address receives every card photo and code.
+# you@email.com

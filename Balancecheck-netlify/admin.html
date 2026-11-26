@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Balancecheck – Admin</title>
+<link rel="icon" href="/favicon.svg"/>
+<style>
+  :root { --blue:#0071e3; --bg:#f5f5f7; --card:#fff; --text:#1d1d1f; --mist:#6e6e73; --line:#d2d2d7; --good:#34c759; --bad:#ff3b30; --warn:#ff9f0a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#161617; --text:#f5f5f7; --mist:#a1a1a6; --line:#2c2c2e; } }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif; background:var(--bg); color:var(--text); line-height:1.5; padding:1.25rem 1rem 4rem; max-width:860px; margin:0 auto; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; }
+  h1 { font-size:1.5rem; font-weight:700; letter-spacing:-.02em; }
+  h2 { font-size:1.05rem; font-weight:600; margin-bottom:.75rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:1.25rem; margin-bottom:1rem; }
+  label { display:block; font-size:.8rem; color:var(--mist); margin:.6rem 0 .25rem; }
+  input, select { width:100%; height:2.75rem; border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--text); padding:0 .9rem; font-size:.95rem; outline:none; }
+  input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,113,227,.18); }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+  @media (max-width:600px) { .row { grid-template-columns:1fr; } }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; height:2.6rem; padding:0 1rem; border-radius:999px; border:0; font-weight:600; font-size:.9rem; cursor:pointer; background:var(--blue); color:#fff; transition:transform .15s, opacity .15s; }
+  .btn:active { transform:scale(.97); } .btn:disabled { opacity:.5; cursor:default; }
+  .btn.good { background:var(--good); } .btn.bad { background:var(--bad); } .btn.warn { background:var(--warn); color:#111; }
+  .btn.quiet { background:transparent; color:var(--text); border:1px solid var(--line); }
+  .btn.sm { height:2.2rem; font-size:.82rem; padding:0 .8rem; }
+  .muted { color:var(--mist); font-size:.85rem; }
+  .pill { display:inline-block; padding:.2rem .6rem; border-radius:999px; font-size:.75rem; font-weight:700; color:#fff; background:var(--mist); }
+  .pill.Pending { background:var(--warn); color:#111; } .pill.Valid, .pill.Delivered { background:var(--good); } .pill.Invalid { background:var(--bad); }
+  .tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .tab { height:2.3rem; padding:0 .9rem; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--mist); font-weight:600; font-size:.85rem; cursor:pointer; }
+  .tab.on { background:var(--text); color:var(--bg); border-color:var(--text); }
+  .order { border:1px solid var(--line); border-radius:16px; padding:1rem; margin-bottom:.75rem; background:var(--card); }
+  .order .top { display:flex; justify-content:space-between; align-items:flex-start; gap:.75rem; }
+  .order .title { font-weight:700; font-size:1.05rem; }
+  .order dl { display:grid; grid-template-columns:auto 1fr; gap:.2rem .8rem; margin:.6rem 0; font-size:.9rem; }
+  .order dt { color:var(--mist); } .order dd { word-break:break-all; font-variant-numeric:tabular-nums; }
+  .order .actions { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.6rem; }
+  code { background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:.85em; }
+  #toasts { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:999; display:flex; flex-direction:column; gap:.5rem; width:min(92vw,420px); pointer-events:none; }
+  .toast { padding:.85rem 1.1rem; border-radius:14px; color:#fff; font-weight:600; box-shadow:0 12px 40px rgba(0,0,0,.35); background:linear-gradient(135deg,#0071e3,#5856d6); animation:pop .35s cubic-bezier(.2,0,0,1); }
+  .toast.good { background:linear-gradient(135deg,#34c759,#30d158); } .toast.bad { background:linear-gradient(135deg,#ff3b30,#ff6b6b); }
+  .toast small { display:block; font-weight:400; opacity:.92; }
+  @keyframes pop { from { opacity:0; transform:translateY(-14px) scale(.96);} to { opacity:1; transform:none; } }
+  .hidden { display:none !important; }
+  .dot { display:inline-block; width:.6rem; height:.6rem; border-radius:50%; background:var(--mist); margin-right:.4rem; }
+  .dot.ok { background:var(--good); } .dot.err { background:var(--bad); }
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+
+<header>
+  <h1>Balancecheck Admin</h1>
+  <a class="btn quiet sm" href="/">View site</a>
+</header>
+
+<section class="card" id="connect">
+  <h2><span class="dot" id="dot"></span>Connection</h2>
+  <p class="muted" id="conn-msg">Checking…</p>
+  <label for="key">Admin key (from the Settings tab of your Google Sheet)</label>
+  <input id="key" type="password" placeholder="Paste your admin key" autocomplete="off"/>
+  <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap">
+    <button class="btn" id="connect-btn">Connect</button>
+    <button class="btn quiet" id="forget-btn">Forget key</button>
+  </div>
+</section>
+
+<section class="card hidden" id="settings">
+  <h2>Settings <span class="muted">(what buyers see)</span></h2>
+  <div class="row">
+    <div><label>USDT · TRC20 wallet</label><input id="s-trc20" placeholder="T…"/></div>
+    <div><label>USDT · ERC20 wallet</label><input id="s-erc20" placeholder="0x…"/></div>
+    <div><label>Bitcoin wallet</label><input id="s-btc" placeholder="bc1…"/></div>
+    <div><label>BTC price in USD (for Bitcoin checkout)</label><input id="s-btcUsd" inputmode="decimal" placeholder="e.g. 95000"/></div>
+    <div><label>Email that receives every card photo and code</label><input id="s-notifyEmail" type="email" placeholder="you@email.com"/></div>
+    <div><label>WhatsApp number (optional, digits only)</label><input id="s-whatsapp" inputmode="numeric" placeholder="2348012345678"/></div>
+  </div>
+  <div style="margin-top:1rem"><button class="btn" id="save-settings">Save settings</button></div>
+</section>
+
+<section class="hidden" id="orders-wrap">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <h2 style="margin:0">Orders <span class="muted" id="count"></span></h2>
+      <button class="btn quiet sm" id="refresh">Refresh</button>
+    </div>
+    <p class="muted" style="margin-top:.4rem">Auto-refreshes every 30 seconds. You get a pop-up when a new order arrives.</p>
+  </div>
+  <div class="tabs">
+    <button class="tab on" data-f="all">All</button>
+    <button class="tab" data-f="pending">Pending</button>
+    <button class="tab" data-f="check">Balance checks</button>
+    <button class="tab" data-f="buy">Purchases</button>
+  </div>
+  <div id="orders"></div>
+</section>
+
+<script src="/site-config.js"></script>
+<script>
+(function () {
+  var URL_ = (window.BC_CONFIG && window.BC_CONFIG.sheetsUrl) || "";
+  var $ = function (id) { return document.getElementById(id); };
+  var key = localStorage.getItem("bc_admin_key") || "";
+  var orders = [], filter = "all", knownIds = null, timer = null;
+
+  function toast(title, body, tone) {
+    var t = document.createElement("div");
+    t.className = "toast " + (tone || "");
+    t.innerHTML = title + (body ? "<small>" + body + "</small>" : "");
+    $("toasts").appendChild(t);
+    try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
+    setTimeout(function () { t.style.transition = "opacity .4s"; t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 400); }, 4500);
+  }
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function api(params) {
+    var u = URL_ + (URL_.indexOf("?") > -1 ? "&" : "?") + Object.keys(params).map(function (k) { return k + "=" + encodeURIComponent(params[k]); }).join("&");
+    return fetch(u, { cache: "no-store" }).then(function (r) { return r.json(); });
+  }
+  function post(data) {
+    return fetch(URL_, { method: "POST", body: JSON.stringify(data) }).then(function (r) { return r.json(); });
+  }
+
+  function setConn(ok, msg) {
+    $("dot").className = "dot " + (ok ? "ok" : "err");
+    $("conn-msg").textContent = msg;
+  }
+
+  function connect() {
+    if (!URL_) { setConn(false, "No Google Sheets URL yet. Open google-sheets-setup.html and paste your Web app URL into site-config.js."); return; }
+    key = $("key").value.trim() || key;
+    if (!key) { setConn(false, "Enter your admin key to continue."); return; }
+    setConn(false, "Connecting…");
+    api({ action: "list", key: key }).then(function (j) {
+      if (!j.ok) { setConn(false, "Wrong admin key. Check the Settings tab of your Sheet."); return; }
+      localStorage.setItem("bc_admin_key", key);
+      setConn(true, "Connected to your Google Sheet.");
+      $("settings").classList.remove("hidden");
+      $("orders-wrap").classList.remove("hidden");
+      $("key").value = key;
+      handleOrders(j.orders || []);
+      loadSettings();
+      if (timer) clearInterval(timer);
+      timer = setInterval(refresh, 30000);
+    }).catch(function () { setConn(false, "Could not reach the Google Sheet. Check the URL in site-config.js and that the script is deployed for 'Anyone'."); });
+  }
+
+  function loadSettings() {
+    api({ action: "settings" }).then(function (j) {
+      if (!j.ok) return;
+      ["trc20", "erc20", "btc", "btcUsd", "notifyEmail", "whatsapp"].forEach(function (k) { $("s-" + k).value = j.settings[k] || ""; });
+    }).catch(function () {});
+  }
+
+  $("save-settings").onclick = function () {
+    var s = {};
+    ["trc20", "erc20", "btc", "btcUsd", "notifyEmail", "whatsapp"].forEach(function (k) { s[k] = $("s-" + k).value.trim(); });
+    $("save-settings").disabled = true;
+    post({ action: "settings", key: key, settings: s }).then(function (j) {
+      $("save-settings").disabled = false;
+      if (j.ok) toast("Settings saved", "Buyers will see the new details within a minute.", "good");
+      else toast("Could not save", j.error || "Try again.", "bad");
+    }).catch(function () { $("save-settings").disabled = false; toast("Could not save", "Network error.", "bad"); });
+  };
+
+  function handleOrders(list) {
+    var ids = list.map(function (o) { return o.order; });
+    if (knownIds) {
+      var fresh = list.filter(function (o) { return knownIds.indexOf(o.order) === -1; });
+      fresh.forEach(function (o) { toast("New order: " + esc(o.brand) + " " + esc(o.value), esc(o.type) + (o.email ? " · " + esc(o.email) : "")); });
+      if (fresh.length) { try { document.title = "(" + fresh.length + ") Balancecheck Admin"; } catch (e) {} }
+    }
+    knownIds = ids;
+    orders = list;
+    render();
+  }
+
+  function refresh() {
+    if (!key) return;
+    api({ action: "list", key: key }).then(function (j) { if (j.ok) handleOrders(j.orders || []); }).catch(function () {});
+  }
+  $("refresh").onclick = function () { refresh(); toast("Refreshing…"); };
+
+  function isCheck(o) { return /check|verify/i.test(o.type || ""); }
+
+  function render() {
+    var list = orders.filter(function (o) {
+      if (filter === "pending") return !o.status || o.status === "Pending";
+      if (filter === "check") return isCheck(o);
+      if (filter === "buy") return !isCheck(o);
+      return true;
+    });
+    $("count").textContent = "(" + list.length + ")";
+    if (!list.length) { $("orders").innerHTML = "<p class='muted'>No orders here yet.</p>"; return; }
+    $("orders").innerHTML = list.map(function (o) {
+      var st = o.status || "Pending";
+      var d = o.date ? new Date(o.date) : null;
+      var when = d && !isNaN(d) ? d.toLocaleString() : esc(o.date);
+      var actions = isCheck(o)
+        ? "<button class='btn good sm' data-s='Valid'>✓ Balance valid</button><button class='btn bad sm' data-s='Invalid'>✕ Card invalid</button>"
+        : "<button class='btn good sm' data-s='Delivered'>✓ Delivered</button><button class='btn bad sm' data-s='Invalid'>✕ Problem</button>";
+      actions += "<button class='btn quiet sm' data-s='Pending'>Reset</button>";
+      return "<div class='order' data-id='" + esc(o.order) + "'>" +
+        "<div class='top'><div><div class='title'>" + esc(o.brand) + " · " + esc(o.value) + "</div><div class='muted'>" + esc(o.type) + " · " + esc(o.region) + " · " + when + "</div></div><span class='pill " + esc(st) + "'>" + esc(st) + "</span></div>" +
+        "<dl>" +
+          "<dt>Order</dt><dd>" + esc(o.order) + "</dd>" +
+          (o.email ? "<dt>Email</dt><dd><a href='mailto:" + esc(o.email) + "'>" + esc(o.email) + "</a></dd>" : "") +
+          (o.code ? "<dt>Code</dt><dd>" + esc(o.code) + "</dd>" : "") +
+          (o.pin ? "<dt>PIN</dt><dd>" + esc(o.pin) + "</dd>" : "") +
+          (o.note ? "<dt>Note</dt><dd>" + esc(o.note) + "</dd>" : "") +
+        "</dl>" +
+        "<input class='note' placeholder='Optional note the buyer will see (e.g. Balance: $48.20)' value='" + esc(o.note) + "' style='height:2.4rem;font-size:.85rem'/>" +
+        "<div class='actions'>" + actions + "</div>" +
+      "</div>";
+    }).join("");
+  }
+
+  $("orders").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-s]");
+    if (!b) return;
+    var card = b.closest(".order"), id = card.getAttribute("data-id"), status = b.getAttribute("data-s");
+    var note = card.querySelector(".note").value.trim();
+    card.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+    post({ action: "status", key: key, order: id, status: status, note: note }).then(function (j) {
+      if (!j.ok) { toast("Could not update", j.error || "Try again.", "bad"); card.querySelectorAll("button").forEach(function (x) { x.disabled = false; }); return; }
+      var o = orders.find(function (x) { return x.order === id; });
+      if (o) { o.status = status; o.note = note; }
+      var msg = { Valid: ["Marked as valid ✓", "The buyer will see 'Balance check successful'.", "good"],
+                  Invalid: ["Marked as invalid", "The buyer will see 'Card invalid'.", "bad"],
+                  Delivered: ["Marked as delivered ✓", "The buyer will see 'Gift card delivered'.", "good"],
+                  Pending: ["Reset to pending", "", ""] }[status];
+      toast(msg[0], msg[1], msg[2]);
+      render();
+    }).catch(function () { toast("Could not update", "Network error.", "bad"); card.querySelectorAll("button").forEach(function (x) { x.disabled = false; }); });
+  });
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.onclick = function () { document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("on"); }); t.classList.add("on"); filter = t.getAttribute("data-f"); render(); };
+  });
+
+  $("connect-btn").onclick = connect;
+  $("key").addEventListener("keydown", function (e) { if (e.key === "Enter") connect(); });
+  $("forget-btn").onclick = function () { localStorage.removeItem("bc_admin_key"); key = ""; $("key").value = ""; location.reload(); };
+
+  if (key) { $("key").value = key; connect(); }
+  else setConn(false, URL_ ? "Enter your admin key to continue." : "No Google Sheets URL yet. Open google-sheets-setup.html and paste your Web app URL into site-config.js.");
+})();
+</script>
+</body>
+</html>

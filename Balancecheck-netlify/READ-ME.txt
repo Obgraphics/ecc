@@ -1,0 +1,18 @@
+Balancecheck — drop this folder on Netlify
+
+1. Open notify-email.txt. Delete the lines that start with #.
+   Put your email alone on the first line and save.
+2. On Netlify: Add new site → Deploy manually.
+   Drag this whole folder onto the page.
+3. Open the site and send one test balance check.
+   You will get a confirmation email from FormSubmit. Click the link in it.
+   Until you confirm, card photos and codes will not arrive.
+4. After that, every check emails the photo, the code, and the PIN to you.
+   Purchases email the order, without a card code.
+5. Optional: Netlify → Forms → Form notifications → add the same email.
+   Netlify then keeps its own copy of each submission.
+6. Domain: Domain management → Add a domain you own, then follow the DNS steps.
+
+The site follows the phone’s light or dark appearance.
+Night Shift is applied by the phone to the whole screen, so the site warms
+with it automatically.
