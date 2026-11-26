@@ -16,10 +16,10 @@
     google:      { bg: "#ffffff", accent: "#4285f4", text: "#1d1d1f" },
     spotify:     { bg: "#191414", accent: "#1db954", text: "#ffffff" },
     hulu:        { bg: "#1ce783", accent: "#040405", text: "#040405" },
-    paramount:   { bg: "#0064ff", accent: "#0033a0", text: "#ffffff" },
+    paramount:   { bg: "#0064ff", accent: "#cfe0ff", text: "#ffffff" },
     visa:        { bg: "#1a1f71", accent: "#f7b600", text: "#ffffff" },
-    vanilla:     { bg: "#f5e6d3", accent: "#c8a97e", text: "#3b2f2f" },
-    amex:        { bg: "#006fcf", accent: "#00175a", text: "#ffffff" },
+    vanilla:     { bg: "#f5e6d3", accent: "#7a5a2a", text: "#3b2f2f" },
+    amex:        { bg: "#006fcf", accent: "#d6ebff", text: "#ffffff" },
     other:       { bg: "#2c2c2e", accent: "#8e8e93", text: "#f5f5f7" }
   };
 
